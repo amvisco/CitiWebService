@@ -10,8 +10,16 @@
 
 package helloworld;
 
+import java.nio.charset.Charset;
 import java.util.Map;
+import java.util.ArrayList;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.util.Collections;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +47,7 @@ public class HelloWorldSpeechlet implements Speechlet {
 
     private static final String ACCOUNT_KEY = "ACCOUNT";
     private static final String ACCOUNT_SLOT = "Account";
+    private static final String URL_PREFIX = "https://citiapi.bluemix.net/";
 
     @Override
     public void onSessionStarted(final SessionStartedRequest request, final Session session)
@@ -95,10 +104,10 @@ public class HelloWorldSpeechlet implements Speechlet {
     private SpeechletResponse getWelcomeResponse() {
         // Create the welcome message.
         String speechText =
-                "Welcome to the Alexa Skills Kit sample. To check your balance, please tell me the account you are interested in by "
-                        + "saying, what's my savings account balance";
+                "Welcome to the Citi. To check your balance, please tell me the account you are interested in by "
+                        + "saying, what's my savings account balance?";
         String repromptText =
-                "Please tell me the account you are interested by saying, what's my savings account balance";
+                "Please tell me the account you are interested by saying, what's my savings account balance?";
 
         return getSpeechletResponse(speechText, repromptText, true);
     }
@@ -124,8 +133,8 @@ public class HelloWorldSpeechlet implements Speechlet {
             String theAccount = listOfAccountsSlot.getValue();
             session.setAttribute(ACCOUNT_KEY, theAccount);
             speechText =
-                    String.format("I now know you are asking for your %s account. You can ask me your "
-                            + "balance, what's my %s account balalnce", theAccount, theAccount);
+                    String.format("I now know you are asking for your %s account. You can ask me for your "
+                            + "balance by saying, what's my %s account balalnce", theAccount, theAccount);
             repromptText =
                     String.format("You can ask me your balace by saying, what's my %s account balance?", theAccount);
 
@@ -156,7 +165,7 @@ public class HelloWorldSpeechlet implements Speechlet {
 
         // Check to make sure user's requested account is in the session
         if (StringUtils.isNotEmpty(theAccount)) {
-            speechText = String.format("Your %s account balance is $123 Goodbye.", theAccount);
+            speechText = String.format("Your %s account balance is $123. Thank you for using Citi, Goodbye.", theAccount);
         } else {
             // Since the user's account is not set render an error message.
             speechText =
@@ -173,10 +182,10 @@ public class HelloWorldSpeechlet implements Speechlet {
      */
     private SpeechletResponse getHelpResponse() {
         String speechText =
-                "You can ask me for one of your account balances by saying "
+                "You can ask me for one of your account balances by saying, "
                         + "what is my savings, checking or credit card account balance?";
         String repromptText =
-                    "I'm not sure which account you are talking about. You can tell me the account you want information about by "
+                    "You can tell me the account you want information about by "
                             + "saying, what's my savings account balance?";
 
           return getSpeechletResponse(speechText, repromptText, true);
@@ -209,6 +218,79 @@ public class HelloWorldSpeechlet implements Speechlet {
         }
     }
 
+    /**
+     * Download JSON-formatted balance from Citi, for a defined account, and return a
+     * String array of the balance, with each balance representing an element in the array.
+     * 
+     * @param account
+     *            the account to get balance for, example: Savings
+     * @return String array of balance for that account, 1 balance per element of the array
+     */
+    @SuppressWarnings("unused")//delete after code is complete
+	private ArrayList<String> getJsonBalanceFromCiti(String account) {
+        InputStreamReader inputStream = null;
+        BufferedReader bufferedReader = null;
+        String text = "";
+        try {
+            String line;
+            URL url = new URL(URL_PREFIX + account);
+            inputStream = new InputStreamReader(url.openStream(), Charset.forName("US-ASCII"));
+            bufferedReader = new BufferedReader(inputStream);
+            StringBuilder builder = new StringBuilder();
+            while ((line = bufferedReader.readLine()) != null) {
+                builder.append(line);
+            }
+            text = builder.toString();
+        } catch (IOException e) {
+            // reset text variable to a blank string
+            text = "";
+        } finally {
+            IOUtils.closeQuietly(inputStream);
+            IOUtils.closeQuietly(bufferedReader);
+        }
+        return parseJson(text);
+    }
+
+    /**
+     * Parse JSON-formatted list of balance from Citi, extract list of balances and
+     * split the events into a String array of individual balances. Run Regex matchers to make the
+     * list pretty by adding a comma after the year to add a pause, and by removing a unicode char.
+     * 
+     * @param text
+     *            the JSON formatted list of balance for a certain account
+     * @return String array of events for that date, 1 event per element of the array
+     */
+    private ArrayList<String> parseJson(String text) {
+        text =
+                text.substring(text.indexOf("\\Balance\\n"));
+        ArrayList<String> balance = new ArrayList<String>();
+        if (text.isEmpty()) {
+            return balance;
+        }
+        int startIndex = 0, endIndex = 0;
+        while (endIndex != -1) {
+            endIndex = text.indexOf("\\n", startIndex);
+            String eventText =
+                    (endIndex == -1 ? text.substring(startIndex) : text.substring(startIndex,
+                            endIndex));
+            // replace dashes returned in text from Citi's API
+            //Pattern pattern = Pattern.compile("\\\\u2013\\s*");
+            //Matcher matcher = pattern.matcher(eventText);
+            //eventText = matcher.replaceAll("");
+            // add comma after year so Alexa pauses before continuing with the sentence
+           // pattern = Pattern.compile("(^\\d+)");
+            //matcher = pattern.matcher(eventText);
+            //if (matcher.find()) {
+                //eventText = matcher.replaceFirst(matcher.group(1) + ",");
+            //}
+            eventText = "In " + eventText;
+            startIndex = endIndex + 2;
+            balance.add(eventText);
+        }
+        Collections.reverse(balance);
+        return balance;
+    }
+    
         /**
      * Wrapper for creating the Ask response from the input strings.
      *
@@ -218,7 +300,8 @@ public class HelloWorldSpeechlet implements Speechlet {
      *            the reprompt for if the user doesn't reply or is misunderstood.
      * @return SpeechletResponse the speechlet response
      */
-    private SpeechletResponse newAskResponse(String stringOutput, String repromptText) {
+    @SuppressWarnings("unused") //delete after code fix.
+	private SpeechletResponse newAskResponse(String stringOutput, String repromptText) {
         PlainTextOutputSpeech outputSpeech = new PlainTextOutputSpeech();
         outputSpeech.setText(stringOutput);
         PlainTextOutputSpeech repromptOutputSpeech = new PlainTextOutputSpeech();
