@@ -133,7 +133,7 @@ public class HelloWorldSpeechlet implements Speechlet {
             String theAccount = listOfAccountsSlot.getValue();
             session.setAttribute(ACCOUNT_KEY, theAccount);
             speechText =
-                    String.format("I now know you are asking for your %s account. You can ask me for your "
+                    String.format("Your %s account balance is $65,345.45. You can ask me for your "
                             + "balance by saying, what's my %s account balalnce", theAccount, theAccount);
             repromptText =
                     String.format("You can ask me your balace by saying, what's my %s account balance?", theAccount);
@@ -143,7 +143,7 @@ public class HelloWorldSpeechlet implements Speechlet {
             speechText = "I'm not sure which account you are talking about, please try again";
             repromptText =
                     "I'm not sure which account you are talking about. You can tell me the account you want information about by "
-                            + "saying, what's my savings account balance?";
+                            + "saying something like, what's my savings account balance?";
         }
         return getSpeechletResponse(speechText, repromptText, true);
     }
@@ -165,7 +165,7 @@ public class HelloWorldSpeechlet implements Speechlet {
 
         // Check to make sure user's requested account is in the session
         if (StringUtils.isNotEmpty(theAccount)) {
-            speechText = String.format("Your %s account balance is $123. Thank you for using Citi, Goodbye.", theAccount);
+            speechText = String.format("Your %s account balance is $65,345.45. Thank you for using Citi, Goodbye.", theAccount);
         } else {
             // Since the user's account is not set render an error message.
             speechText =
