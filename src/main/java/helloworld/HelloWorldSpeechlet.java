@@ -77,9 +77,9 @@ public class HelloWorldSpeechlet implements Speechlet {
 
         // Note: If the session is started with an intent, no welcome message will be rendered;
         // rather, the intent specific response will be returned.
-        if  ("MyBalanceIntent".equals(intentName)) {
-            return getBalanceResponse(intent, session);
-        }else if ("MyAccountIntent".equals(intentName)) {
+        //if  ("MyBalanceIntent".equals(intentName)) {
+            //return getBalanceResponse(intent, session);
+        if ("MyAccountIntent".equals(intentName)) {
             return setAccountResponse(intent, session);
         }else if ("HelpIntent".equals(intentName)) {
             return getHelpResponse();
@@ -156,7 +156,8 @@ public class HelloWorldSpeechlet implements Speechlet {
      *            intent for the request
      * @return SpeechletResponse spoken and visual response for the intent
      */
-    private SpeechletResponse getBalanceResponse(final Intent intent, final Session session) {
+    @SuppressWarnings("unused") //maybe we don't need this class
+	private SpeechletResponse getBalanceResponse(final Intent intent, final Session session) {
         String speechText;
         boolean isAskResponse = false;
 
