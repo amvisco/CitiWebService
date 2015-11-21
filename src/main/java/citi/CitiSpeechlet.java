@@ -8,7 +8,7 @@
     or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
  */
 
-package helloworld;
+package citi;
 
 import java.nio.charset.Charset;
 import java.util.Map;
@@ -42,8 +42,8 @@ import com.amazon.speech.ui.SimpleCard;
  * This sample shows how to create a simple speechlet for handling intent requests and managing
  * session interactions.
  */
-public class HelloWorldSpeechlet implements Speechlet {
-    private static final Logger log = LoggerFactory.getLogger(HelloWorldSpeechlet.class);
+public class CitiSpeechlet implements Speechlet {
+    private static final Logger log = LoggerFactory.getLogger(CitiSpeechlet.class);
 
     private static final String ACCOUNT_KEY = "ACCOUNT";
     private static final String ACCOUNT_SLOT = "Account";
