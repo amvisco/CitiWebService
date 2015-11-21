@@ -125,7 +125,8 @@ public class HelloWorldSpeechlet implements Speechlet {
 
         // Get the account slot from the list of slots.
         Slot listOfAccountsSlot = slots.get(ACCOUNT_SLOT);
-        String speechText, repromptText;
+        String speechText;
+        boolean isAskResponse = false;
 
         // Check for account and create output to user.
         if (listOfAccountsSlot != null) {
@@ -133,19 +134,16 @@ public class HelloWorldSpeechlet implements Speechlet {
             String theAccount = listOfAccountsSlot.getValue();
             session.setAttribute(ACCOUNT_KEY, theAccount);
             speechText =
-                    String.format("Your %s account balance is $65,345.45. You can ask me for your "
-                            + "balance by saying, what's my %s account balalnce", theAccount, theAccount);
-            repromptText =
-                    String.format("You can ask me your balace by saying, what's my %s account balance?", theAccount);
+                    String.format("Your %s account balance is $65,345.45. Thank you for using Citi.",theAccount);
 
         } else {
             // Render an error since we don't know what the users desired account is.
-            speechText = "I'm not sure which account you are talking about, please try again";
-            repromptText =
+            speechText =
                     "I'm not sure which account you are talking about. You can tell me the account you want information about by "
                             + "saying something like, what's my savings account balance?";
+            isAskResponse = true;
         }
-        return getSpeechletResponse(speechText, repromptText, true);
+        return getSpeechletResponse(speechText, speechText, isAskResponse);
     }
 
     /**
